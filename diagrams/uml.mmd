@@ -2,14 +2,66 @@ classDiagram
     %% Replace the placeholders below with your actual classes, attributes, methods, and relationships.
     %% Keep this file updated so it matches your final implementation.
 
-    class ClassName {
-        +type attribute
-        +method() returnType
+    classDiagram
+    class Owner {
+        +String name
+        +int available_time
+        +dict preferences
+        +List~Pet~ pets
+        +update_availability()
+        +add_pet()
+        +get_constraints()
     }
 
-    class AnotherClass {
-        +type attribute
-        +method() returnType
+    class Pet {
+        +String name
+        +String species
+        +String breed
+        +String energy_level
+        +List~Task~ tasks
+        +add_task()
+        +remove_task()
+        +get_daily_tasks()
     }
 
-    ClassName --> AnotherClass : relationship
+    class Task {
+        +String name
+        +int duration
+        +int priority
+        +String recurrence
+        +TimeWindow time_window
+        +String notes
+        +is_due_today() bool
+        +fits_time_window() bool
+        +describe() String
+    }
+
+    class Scheduler {
+        +Owner owner
+        +Pet pet
+        +List~Task~ tasks
+        +Time start_time
+        +Time end_time
+        +sort_tasks()
+        +filter_tasks_by_time()
+        +assign_time_slots()
+        +generate_plan() Schedule
+        +explain_choices()
+    }
+
+    class Schedule {
+        +List~Entry~ entries
+        +int total_time_used
+        +List~Task~ skipped_tasks
+        +add_entry()
+        +to_readable_format() String
+        +summarize()
+    }
+
+    Owner "1" o-- "many" Pet : owns
+    Pet "1" o-- "many" Task : has
+    Scheduler ..> Owner : uses
+    Scheduler ..> Pet : uses
+    Scheduler ..> Task : schedules
+    Scheduler ..> Schedule : generates
+    Schedule "1" o-- "many" Task : references

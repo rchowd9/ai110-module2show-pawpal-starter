@@ -4,6 +4,30 @@
 
 **a. Initial design**
 
+- add a pet
+- schedule a walk
+- see today's tasks
+
+Owner
+Attributes: name, available_time, preferences, pets
+Methods: update_availability(), add_pet(), get_constraints()
+
+Pet
+Attributes: name, species, breed, energy_level, tasks
+Methods: add_task(), remove_task(), get_daily_tasks()
+
+Task
+Attributes: name, duration, priority, recurrence, time_window, notes
+Methods: is_due_today(), fits_time_window(), describe()
+
+Scheduler
+Attributes: owner, pet, tasks, start_time, end_time
+Methods: sort_tasks(), filter_tasks_by_time(), assign_time_slots(), generate_plan(), explain_choices()
+
+Schedule
+Attributes: entries, total_time_used, skipped_tasks
+Methods: add_entry(), to_readable_format(), summarize()
+
 - Briefly describe your initial UML design.
 - What classes did you include, and what responsibilities did you assign to each?
 
