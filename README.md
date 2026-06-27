@@ -54,6 +54,14 @@ Paste a sample of your app's CLI or Streamlit output here so a reader can see wh
 #   ...
 ```
 
+=== TODAY'S SCHEDULE ===
+Today's plan:
+  08:00-08:10  • Biscuit's Feeding (10 min, priority 5, daily)
+  08:10-08:40  • Biscuit's Morning Walk (30 min, priority 3, daily) [morning]
+  08:40-09:00  • Mochi's Playtime (20 min, priority 2, daily) [afternoon]
+
+Summary: 3 task(s) scheduled using 60 min; 0 skipped.
+
 ## 🧪 Testing PawPal+
 
 ```bash
