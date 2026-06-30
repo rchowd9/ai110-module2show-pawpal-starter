@@ -76,7 +76,46 @@ Sample test output:
 
 ```
 # Paste your pytest output here
-```
+
+python -m pytest
+====================== test session starts =======================
+platform win32 -- Python 3.14.3, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\Home\Downloads\pawpal\ai110-module2show-pawpal-starter
+plugins: anyio-4.14.1
+collected 5 items                                                 
+
+tests\test_pawpal.py ::test_sorting_correctness_happy_path PASSED           [ 20%]
+tests\test_pawpal.py ::test_sorting_anytime_tasks_sink_to_bottom PASSED     [ 40%]
+tests\test_pawpal.py ::test_recurrence_logic_generation PASSED              [ 60%]
+tests\test_pawpal.py ::test_conflict_detection_flags_duplicate_slots PASSED [ 80%]
+tests\test_pawpal.py ::test_scheduler_robustness_empty_states PASSED        [100%]
+
+======================= 5 passed in 0.14s ========================
+
+### 🧪 Automated Test Suite
+
+We use `pytest` to make sure our scheduling logic behaves exactly how it should and to prevent any breaking changes as the system evolves. 
+
+#### How to Run the Tests
+
+To run the full suite from your project root directory, open your terminal and type:
+
+```powershell
+python -m pytest
+
+#### What These Tests Cover
+
+The suite focuses on verifying real-world scenarios along with tricky edge cases to ensure the scheduling engine stays reliable:
+
+* **Chronological Sorting:** Confirms that when you pass in multiple tasks scattered completely out of order, the scheduler correctly organizes them from earliest to latest based on their 24-hour clock times.
+
+* **Handling Anytime Tasks:** Validates that tasks without a specific preferred time anchor drop safely to the bottom of the schedule so they never accidentally bump a time-sensitive task.
+
+* **Dynamic Recurrence:** Checks that when a daily or weekly routine item is completed, the system toggles its status correctly and immediately spawns an identical task pushed forward by the right amount of time.
+
+* **Conflict Alerts:** Ensures that if two tasks share the exact same time slot or overlap, a human-readable warning is generated without crashing the app.
+
+* **Empty States:** Tests the engine's resilience when a household profile has zero active tasks to verify that the code handles empty lists gracefully instead of throwing index or attribute errors.
 
 ## 📐 Smarter Scheduling
 
