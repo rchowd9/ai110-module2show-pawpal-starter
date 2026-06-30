@@ -92,13 +92,31 @@ It prevents me from writing logic that accidentally contradicts itself.
 
 **a. Constraints and priorities**
 
-- What constraints does your scheduler consider (for example: time, priority, preferences)?
-- How did you decide which constraints mattered most?
+* **What constraints does your scheduler consider?**
+    Our enhanced scheduler evaluates a multi-layered set of explicit constraints:
+    1.  **Total Time Budget:** The absolute physical limit on care hours available, defined by `Owner.available_time`.
+    2.  **Hard Clock-Time Anchors:** Exact timing requirements via `Task.preferred_time` (e.g., critical medications or rigid appointments).
+    3.  **Loose Time Windows:** Coarser operational blocks defined by `TIME_WINDOWS` (e.g., "morning", "afternoon") ensuring tasks fit broad daily routines.
+    4.  **Task Priority Metrics:** Relative task importance scaled 1 (lowest) through 5 (highest).
+
+* **How did you decide which constraints mattered most?**
+    We established a strict operational hierarchy: **Hard Chronological Availability > Task Urgency/Priority**. 
+    Physical availability is an unyielding constraint—an owner cannot physically execute a task if their time budget or the operational window has passed. Once a timeline window is validated, the engine relies on the task's `priority` metric (e.g., medical or feeding needs scoring a 5) to sort and secure slots before allocating remaining capacity to flexible tasks like "Brush Fur" (priority 2).
+
+
 
 **b. Tradeoffs**
 
-- Describe one tradeoff your scheduler makes.
-- Why is that tradeoff reasonable for this scenario?
+* **Describe one tradeoff your scheduler makes.**
+    Our lightweight conflict detection system (`Scheduler.check_conflicts()`) prioritizes performance efficiency over exhaustive timeline scanning. It handles conflict auditing by sorting tasks chronologically and performing an $O(N)$ sequential interval pass to check if a subsequent task begins before an immediately preceding task concludes (`start_2 < end_1`). 
+    
+    The tradeoff is that it only catches overlaps between **immediately adjacent sequential entries** in the sorted queue. If a very long-running task (e.g., a 60-minute "Vet Visit" at 08:00) spans across multiple shorter, back-to-back tasks (e.g., a 5-minute "Meds" dose at 08:15 and a "Feeding" at 08:30), the adjacent comparison strategy will flag the first collision but may not map trailing multi-layered overlaps.
+
+* **Why is that tradeoff reasonable for this scenario?**
+    This tradeoff is highly reasonable for a day-to-day pet routine planner for several reasons:
+    1.  **Algorithmic Performance:** It avoids complex, resource-heavy nested look-ahead sweeps ($O(N^2)$ loops) or interval trees, keeping the codebase clean, highly readable, and performant.
+    2.  **User UI Feedback:** For a standard pet owner profile, alerting them to the *initial* structural breakdown or overlap in their schedule block is sufficient to prompt a calendar adjustment.
+    3.  **Domain Specifics:** Most pet-care micro-tasks (feeding, quick breaks, giving medication) are short-duration events. Long, sprawling tasks that engulf multiple blocks are exceptions rather than the rule, making sequential checking incredibly reliable for standard use cases.
 
 ---
 

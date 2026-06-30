@@ -82,12 +82,17 @@ Sample test output:
 
 > Fill in once you've implemented scheduling logic.
 
+## 📐 Smarter Scheduling
+
 | Feature | Method(s) | Notes |
 |---------|-----------|-------|
-| Task sorting | | e.g., by priority, duration |
-| Filtering | | e.g., skip tasks if time runs out |
-| Conflict handling | | e.g., overlapping time slots |
-| Recurring tasks | | e.g., daily vs. weekly |
+| **Task sorting** | `Scheduler.sort_by_time()` | Orders tasks chronologically using an alphabetical lambda key comparison on 24-hour clock strings (`"HH:MM"`). Pushes loose, flexible `"Anytime"` assignments safely to the bottom of the list. |
+
+| **Filtering** | `Scheduler.filter_tasks()` | Employs fast list-comprehensions to dynamically isolate tasks by completion status (pending vs. complete) or a specific pet profile target with case-insensitive boundary matches. |
+
+| **Conflict handling** | `Scheduler.check_conflicts()` | Translates timestamp strings into aggregate minute counters from midnight to evaluate task windows, executing a sequential interval pass to flag overlaps without interrupting the application flow. |
+
+| **Recurring tasks** | `Task.mark_complete()` | Integrates native Python `datetime.timedelta` logic to automatically advance dates by `+1 day` (Daily) or `+1 week` (Weekly) and spawn the next due instance upon task completion. |
 
 ## 📸 Demo Walkthrough
 

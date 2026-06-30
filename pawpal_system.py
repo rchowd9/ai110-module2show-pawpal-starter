@@ -10,7 +10,7 @@ Class roles:
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, time, timedelta
+from datetime import datetime, time, timedelta, date
 from typing import Optional
 
 # Named parts of the day mapped to (start_hour, end_hour) ranges.
@@ -41,6 +41,8 @@ class Task:
     notes: str = ""
     completed: bool = False            # completion status
     pet_name: str = ""                 # set when attached to a Pet (back-ref)
+    preferred_time: Optional[str] = None  # "HH:MM" format string (e.g., "08:30")
+    due_date: date = field(default_factory=date.today)  # Track the current scheduled date
 
     def is_due_today(self) -> bool:
         """Return True if this task should be scheduled today.
@@ -68,17 +70,36 @@ class Task:
         # Overlap if the task's window starts before the range ends and vice versa.
         return win_start <= end and win_end >= start
 
-    def mark_complete(self) -> None:
-        """Mark this task as done."""
+    def mark_complete(self) -> Optional[Task]:
+        """Mark this task as done. If recurring, return a fresh task for the next occurrence."""
         self.completed = True
+        
+        if self.recurrence == "daily":
+            next_date = self.due_date + timedelta(days=1)
+            return Task(
+                name=self.name, duration=self.duration, priority=self.priority,
+                recurrence=self.recurrence, time_window=self.time_window,
+                notes=self.notes, pet_name=self.pet_name, 
+                preferred_time=self.preferred_time, due_date=next_date
+            )
+        elif self.recurrence == "weekly":
+            next_date = self.due_date + timedelta(weeks=1)
+            return Task(
+                name=self.name, duration=self.duration, priority=self.priority,
+                recurrence=self.recurrence, time_window=self.time_window,
+                notes=self.notes, pet_name=self.pet_name, 
+                preferred_time=self.preferred_time, due_date=next_date
+            )
+        return None
 
     def describe(self) -> str:
         """Return a human-readable summary of the task."""
         owner = f"{self.pet_name}'s " if self.pet_name else ""
         window = f" [{self.time_window}]" if self.time_window else ""
         status = "✓" if self.completed else "•"
+        time_str = f" @ {self.preferred_time}" if self.preferred_time else ""
         return (
-            f"{status} {owner}{self.name} "
+            f"{status} {owner}{self.name}{time_str} "
             f"({self.duration} min, priority {self.priority}, {self.recurrence}){window}"
         )
 
@@ -214,12 +235,57 @@ class Scheduler:
             if t.fits_time_window(self.start_time, self.end_time)
         ]
 
-    def assign_time_slots(self, tasks: list[Task]) -> Schedule:
-        """Pack tasks sequentially within the window and time budget.
+    def filter_tasks(
+        self,
+        tasks: list[Task],
+        completed: Optional[bool] = None,
+        pet_name: Optional[str] = None,
+    ) -> list[Task]:
+        """Filter tasks by completion status and/or pet name."""
+        result = tasks
+        if completed is not None:
+            result = [t for t in result if t.completed == completed]
+        if pet_name is not None:
+            target = pet_name.lower()
+            result = [t for t in result if t.pet_name.lower() == target]
+        return result
 
-        A task is skipped if it would overrun the end time or exceed the
-        owner's available minutes.
-        """
+    def sort_by_time(self, tasks: list[Task]) -> list[Task]:
+        """Order tasks chronologically by preferred start time; anytime tasks sort last."""
+        return sorted(
+            tasks,
+            key=lambda t: (t.preferred_time is None, t.preferred_time or "23:59", -t.priority)
+        )
+
+    def check_conflicts(self, tasks: list[Task]) -> list[str]:
+        """Lightweight conflict detection checking if explicit clock-time tasks overlap windows."""
+        sorted_tasks = self.sort_by_time(tasks)
+        warnings = []
+        
+        def to_minutes(time_str: str) -> int:
+            h, m = map(int, time_str.split(":"))
+            return h * 60
+
+        for i in range(len(sorted_tasks) - 1):
+            t1 = sorted_tasks[i]
+            t2 = sorted_tasks[i+1]
+            
+            if not t1.preferred_time or not t2.preferred_time:
+                continue
+                
+            start_1 = to_minutes(t1.preferred_time)
+            end_1 = start_1 + t1.duration
+            start_2 = to_minutes(t2.preferred_time)
+            
+            if start_2 < end_1:
+                warnings.append(
+                    f"⚠️ Conflict Detected: [{t1.pet_name}] '{t1.name}' (starts {t1.preferred_time}, runs {t1.duration}m) "
+                    f"overlaps with [{t2.pet_name}] '{t2.name}' starting at {t2.preferred_time}."
+                )
+        return warnings
+
+    def assign_time_slots(self, tasks: list[Task]) -> Schedule:
+        """Pack tasks sequentially within the window and time budget."""
         schedule = Schedule()
         cursor = self.start_time
         budget = self.owner.available_time
