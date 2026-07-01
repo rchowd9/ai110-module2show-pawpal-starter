@@ -1,0 +1,82 @@
+classDiagram
+    direction LR
+
+    class Task {
+        +String name
+        +int duration
+        +int priority
+        +String recurrence
+        +String time_window
+        +String notes
+        +bool completed
+        +String pet_name
+        +String preferred_time
+        +date due_date
+        +is_due_today() bool
+        +fits_time_window() bool
+        +mark_complete() Task
+        +describe() String
+    }
+
+    class Pet {
+        +String name
+        +String species
+        +String breed
+        +String energy_level
+        +List~Task~ tasks
+        +add_task(Task task) void
+        +remove_task(Task task) void
+        +get_daily_tasks() List~Task~
+    }
+
+    class Owner {
+        +String name
+        +int available_time
+        +dict preferences
+        +List~Pet~ pets
+        +update_availability(int available_time) void
+        +add_pet(Pet pet) void
+        +get_all_tasks() List~Task~
+        +get_daily_tasks() List~Task~
+        +get_constraints() dict
+    }
+
+    class ScheduleEntry {
+        +Task task
+        +Time start_time
+        +Time end_time
+    }
+
+    class Schedule {
+        +List~ScheduleEntry~ entries
+        +int total_time_used
+        +List~Task~ skipped_tasks
+        +add_entry(ScheduleEntry entry) void
+        +to_readable_format() String
+        +summarize() String
+    }
+
+    class Scheduler {
+        +Owner owner
+        +Time start_time
+        +Time end_time
+        +retrieve_tasks() List~Task~
+        +sort_tasks() List~Task~
+        +sort_by_time() List~Task~
+        +filter_tasks_by_time() List~Task~
+        +filter_tasks() List~Task~
+        +check_conflicts() List~String~
+        +assign_time_slots() Schedule
+        +generate_plan() Schedule
+        +explain_choices() String
+    }
+
+    %% Relationships and Dependencies
+    Owner "1" o-- "many" Pet : owns
+    Pet "1" o-- "many" Task : has
+    Schedule "1" o-- "many" ScheduleEntry : contains
+    ScheduleEntry "1" --> "1" Task : wraps
+    Schedule "1" o-- "many" Task : skipped_tasks
+    Scheduler ..> Owner : coordinates
+    Scheduler ..> Schedule : generates
+    Task ..> Task : spawns next occurrence
